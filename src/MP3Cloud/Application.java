@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -2621,12 +2622,48 @@ public class Application extends JFrame {
 
     private void commitButtonAutoMouseReleased(MouseEvent evt) {                                               
         commitButtonAuto.setBackground(new Color(0,187,229));
+        //tags mp3file
         Song song = new Song();
         song.set_mp3file(mp3file);
         song.set_title(autoTitleField.getText());
         song.set_artist(autoArtistField.getText());
         song.retrieveSongContent();
         song.retrieveAlbumContent();
+        
+        //adds to database
+        try {
+			Class.forName("org.sqlite.JDBC");
+			Connection conn = DriverManager.getConnection("jdbc:sqlite:mp3cloud.db");
+			PreparedStatement prep;
+			String secs;
+			
+			prep = conn.prepareStatement("INSERT INTO songs VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
+			prep.setString(1, song.get_title());
+	        prep.setString(2, song.get_artist());
+	        prep.setString(3, song.get_album());
+	        prep.setString(4, song.get_albumArtist());
+	        prep.setString(5, String.valueOf(song.get_trackNo()));
+	        prep.setString(6, String.valueOf(song.get_created_year()));
+	        prep.setString(7, song.get_genre());
+	        if (Math.round(((double)mp3file.getLengthInSeconds())/100*60%60)<10) {
+	        	secs = "0"+String.valueOf(Math.round(((double)mp3file.getLengthInSeconds())/100*60%60));
+	        }
+	        else {
+	        	secs = String.valueOf(Math.round(((double)mp3file.getLengthInSeconds())/100*60%60));
+	        }
+	        prep.setString(8, String.valueOf(mp3file.getLengthInSeconds()/60) + ":" + secs);
+	        prep.addBatch(); 
+	        conn.setAutoCommit(false);
+	        prep.executeBatch();
+	        conn.setAutoCommit(true);
+	        conn.close();
+        } catch(SQLException e) {
+			e.getMessage();
+		} catch(ClassNotFoundException e) {
+			e.getMessage();
+		}
+        
+        //resets fields
         resetFields();
         
         if (song.setTags()) {
@@ -2672,7 +2709,42 @@ public class Application extends JFrame {
         } catch(NumberFormatException e) {e.printStackTrace();}
         song.set_genre(genreField.getText());
         
+      //adds to database
+        try {
+			Class.forName("org.sqlite.JDBC");
+			Connection conn = DriverManager.getConnection("jdbc:sqlite:mp3cloud.db");
+			PreparedStatement prep;
+			String secs;
+			
+			prep = conn.prepareStatement("INSERT INTO songs VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
+			prep.setString(1, song.get_title());
+	        prep.setString(2, song.get_artist());
+	        prep.setString(3, song.get_album());
+	        prep.setString(4, song.get_albumArtist());
+	        prep.setString(5, String.valueOf(song.get_trackNo()));
+	        prep.setString(6, String.valueOf(song.get_created_year()));
+	        prep.setString(7, song.get_genre());
+	        if (Math.round(((double)mp3file.getLengthInSeconds())/100*60%60)<10) {
+	        	secs = "0"+String.valueOf(Math.round(((double)mp3file.getLengthInSeconds())/100*60%60));
+	        }
+	        else {
+	        	secs = String.valueOf(Math.round(((double)mp3file.getLengthInSeconds())/100*60%60));
+	        }
+	        prep.setString(8, String.valueOf(mp3file.getLengthInSeconds()/60) + ":" + secs);
+	        prep.addBatch(); 
+	        conn.setAutoCommit(false);
+	        prep.executeBatch();
+	        conn.setAutoCommit(true);
+	        conn.close();
+        } catch(SQLException e) {
+			e.getMessage();
+		} catch(ClassNotFoundException e) {
+			e.getMessage();
+		}
+        
+        //resets fields
         resetFields();
+        
         if (song.setTags()) {
         	manualCommitResultIcon.setToolTipText(null);
             manualCommitResultIcon.setIcon(new ImageIcon(getClass().getResource("/mp3guiimages/resultCommitSuccess.jpg")));
